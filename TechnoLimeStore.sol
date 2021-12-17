@@ -21,7 +21,7 @@ contract TechnoLimeStore{
     }
     uint private orderIdCounter;
 
-    uint private constant refundTime = 100;
+    uint private constant REFUND_TIME_SECONDS = 100;
 
     //client address => product id => order id
     mapping(address => mapping(uint => Order)) private clientOrders;
@@ -75,11 +75,13 @@ contract TechnoLimeStore{
         {
             Product storage product = products[productFromName[productName]];
             product.quantity += productQuantity;
+            
             emit ProductUpdated(productId, productQuantity);
         }else{
             Product memory newProduct = Product(productIdCounter, productName, productQuantity);
             products.push(newProduct);
             productFromName[productName] = productIdCounter;
+
             emit ProductCreated(productIdCounter, productName, productQuantity);
             productIdCounter++;        
         }
@@ -100,6 +102,7 @@ contract TechnoLimeStore{
         Order memory newOrder = Order(orderIdCounter, msg.sender, productId, block.timestamp, true);
         clientOrders[msg.sender][productId] = newOrder;
         productOrders[productId].push(msg.sender);
+        
         emit ProductPurchased(productId, msg.sender);
         orderIdCounter++;
     }
@@ -111,7 +114,7 @@ contract TechnoLimeStore{
             string memory errorMsg = string(abi.encodePacked("No purchase of product: '", currentProduct.name, "' has been made by you!"));
             revert(errorMsg); 
         }
-        if(currentOrder.orderTime + refundTime < block.timestamp)
+        if(currentOrder.orderTime + REFUND_TIME_SECONDS < block.timestamp)
         {
             revert("Return time over!"); 
         }
